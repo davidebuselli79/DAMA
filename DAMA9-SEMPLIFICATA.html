@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dama Base con Presa</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 1px;
+            margin: 20px auto;
+            width: fit-content;
+            border: 2px solid black;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+        }
+        .black { background-color: #769656; color: white; }
+        .white { background-color: #eeeed2; }
+    </style>
+</head>
+<body>
+    <h1>Dama Base con Presa</h1>
+    <p>Clicca su una pedina per selezionarla e poi sulla destinazione per spostarla</p>
+    <div class="board" id="board"></div>
+    
+    <script>
+        const board = document.getElementById("board");
+        let selectedCell = null;
+
+        const initialBoard = [
+            ["", "⚫", "", "⚫", "", "⚫", "", "⚫"],
+            ["⚫", "", "⚫", "", "⚫", "", "⚫", ""],
+            ["", "⚫", "", "⚫", "", "⚫", "", "⚫"],
+            ["", "", "", "", "", "", "", ""],
+            ["", "", "", "", "", "", "", ""],
+            ["🔴", "", "🔴", "", "🔴", "", "🔴", ""],
+            ["", "🔴", "", "🔴", "", "🔴", "", "🔴"],
+            ["🔴", "", "🔴", "", "🔴", "", "🔴", ""]
+        ];
+
+        function createBoard() {
+            board.innerHTML = "";
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell", (row + col) % 2 === 0 ? "white" : "black");
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.innerHTML = initialBoard[row][col];
+                    cell.addEventListener("click", handleCellClick);
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(event) {
+            let targetCell = event.currentTarget;
+            let piece = targetCell.innerHTML;
+
+            if (selectedCell) {
+                if (isValidMove(selectedCell, targetCell)) {
+                    movePiece(selectedCell, targetCell);
+                }
+                selectedCell = null;
+            } else if (piece) {
+                selectedCell = targetCell;
+            }
+        }
+
+        function movePiece(fromCell, toCell) {
+            if (!toCell.classList.contains("black")) return; 
+            let fromRow = parseInt(fromCell.dataset.row);
+            let fromCol = parseInt(fromCell.dataset.col);
+            let toRow = parseInt(toCell.dataset.row);
+            let toCol = parseInt(toCell.dataset.col);
+            let piece = fromCell.innerHTML;
+
+            let middleRow = (fromRow + toRow) / 2;
+            let middleCol = (fromCol + toCol) / 2;
+            let middleCell = document.querySelector(`[data-row='${middleRow}'][data-col='${middleCol}']`);
+
+            if (Math.abs(fromRow - toRow) === 2 && middleCell.innerHTML && getColor(middleCell.innerHTML) !== getColor(piece)) {
+                middleCell.innerHTML = "";
+            }
+
+            toCell.innerHTML = piece;
+            fromCell.innerHTML = "";
+
+            if (toRow === 0 && piece === "🔴") toCell.innerHTML = "👑🔴";
+            if (toRow === 7 && piece === "⚫") toCell.innerHTML = "👑⚫";
+        }
+
+        function isValidMove(fromCell, toCell) {
+            if (toCell.innerHTML || !toCell.classList.contains("black")) return false;
+            let fromRow = parseInt(fromCell.dataset.row);
+            let fromCol = parseInt(fromCell.dataset.col);
+            let toRow = parseInt(toCell.dataset.row);
+            let toCol = parseInt(toCell.dataset.col);
+
+            if (Math.abs(fromRow - toRow) === 1 && Math.abs(fromCol - toCol) === 1) return true;
+
+            let middleRow = (fromRow + toRow) / 2;
+            let middleCol = (fromCol + toCol) / 2;
+            let middleCell = document.querySelector(`[data-row='${middleRow}'][data-col='${middleCol}']`);
+            return Math.abs(fromRow - toRow) === 2 && Math.abs(fromCol - toCol) === 2 && middleCell.innerHTML && getColor(middleCell.innerHTML) !== getColor(fromCell.innerHTML);
+        }
+
+        function getColor(piece) {
+            return piece.includes("🔴") ? "red" : "black";
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
